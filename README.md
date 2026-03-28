@@ -12,6 +12,8 @@
 - **Лидерборд**: Public = недели 1,3,5 (30%), Private = остальные 7 недель (70%)
 - **Лучший скор**: **0.1414 LB** (public)
 
+![EDA Overview](images/eda_overview.png)
+
 ---
 
 ## Конфигурация
@@ -72,6 +74,8 @@ FB_inject = (1 - α) * rank(CB_blend) + α * rank(FB_model)
 
 ### CoLES эмбеддинги
 
+![CoLES Training](images/coles_training.png)
+
 - **Архитектура**: 12 категориальных эмбеддингов (8-dim) + 1 числовой (amt_log) -> GRU(256-dim, 2 слоя) -> mean-pool -> linear -> 256-dim вектор клиента
 - **Лосс**: NT-Xent, две случайные 64-событийные подпоследовательности одного клиента = положительная пара
 - **Обучение**: 15 эпох, batch=256, AdamW + cosine schedule, на 100K клиентах, 177M событий
@@ -84,6 +88,8 @@ FB_inject = (1 - α) * rank(CB_blend) + α * rank(FB_model)
 ---
 
 ## Группы фичей
+
+![Feature Categories](images/feature_categories.png)
 
 ### 1. Категориальные (15)
 
@@ -185,6 +191,12 @@ FB_inject = (1 - α) * rank(CB_blend) + α * rank(FB_model)
 
 ---
 
+## Результаты экспериментов
+
+![Score Progression](images/score_progression.png)
+
+![Feature Importance](images/feature_importance.png)
+
 ## Что работает 
 
 | # | Метод | Эффект |
@@ -205,6 +217,8 @@ FB_inject = (1 - α) * rank(CB_blend) + α * rank(FB_model)
 | 14 | **Фичи детекции типов фрода** (VoIP, MCC scatter, impossible travel) | 0.1384 -> 0.1414 |
 
 ---
+
+![Experiments](images/experiments.png)
 
 ## Что НЕ работает 
 
@@ -229,6 +243,40 @@ FB_inject = (1 - α) * rank(CB_blend) + α * rank(FB_model)
 
 ---
 
+## Error Analysis: что модель пропускает
+
+![Error Analysis](images/error_analysis.png)
+
+Пропущенные фроды — это «тихие» мошенники: маленькие суммы (173K vs 5.5M пойманных), нет burst-паттерна, нет VoIP, обычные MCC. Они выглядят как нормальные транзакции. Для их поимки нужен анализ **отклонений от поведенческой нормы клиента**.
+
+---
+
+## Быстрый старт
+
+### Вариант 1: Готовый сабмит (0 минут)
+Скачайте `coles_seed_fb50.csv` и загрузите на лидерборд → **0.1414 PR-AUC**
+
+### Вариант 2: С готовыми весами (~24 мин GPU)
+```bash
+# Фичи уже в кэше, CoLES эмбеддинги готовы
+# Только refit CatBoost (3 seeds x 4 модели)
+python run_coles_refit.py
+```
+
+### Вариант 3: Полный пайплайн (~60 мин)
+```bash
+python run_catboost.py       # 40 мин - фичи + обучение
+python run_coles.py          # 11 мин - CoLES pre-training
+python run_coles_refit.py    # 24 мин - refit + submission
+```
+
+### Предобученные веса (в репозитории)
+- `coles_model.pt` — обученный CoLES энкодер (2.9 MB)
+- `coles_embeddings.parquet` — 256-dim эмбеддинги для 100K клиентов (181 MB)
+- `coles_seed_fb50.csv` — готовый сабмит (22 MB)
+
+---
+
 ## Скоры
 
 | Модель / Бленд | Public LB | Примечание |
@@ -237,4 +285,12 @@ FB_inject = (1 - α) * rank(CB_blend) + α * rank(FB_model)
 | CB ensemble + FB (соло) | 0.1384 | CatBoost + feedback-инъекция |
 | CB ensemble | 0.118 | Базовый CatBoost |
 
+---
 
+## Подробный Writeup
+
+Полная история решения с детальным описанием всех экспериментов: [WRITEUP.md](WRITEUP.md)
+
+---
+
+*Built with CatBoost, PyTorch, Polars by team ICEQ*
