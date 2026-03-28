@@ -1,6 +1,6 @@
 # Data Fusion 2026 - задача "Страж", паблик решение команды ICEQ
 
-<p align="center"><img src=img/logo.png width=450px></p>
+<p align="center"><img src=logo.png width=450px></p>
 
 ## Краткое описание задачи
 
