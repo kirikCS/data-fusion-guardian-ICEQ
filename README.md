@@ -29,8 +29,8 @@ RAM: 64GB
 ```
 current_pipeline/
  run_catboost.py          # Основной CatBoost пайплайн (фичи + обучение + блендинг)
- run_coles.py             # CoLES самообучение -> клиентские эмбеддинги
- run_coles_refit.py       # Рефит CatBoost с CoLES эмбеддингами -> сабмиты
+ run_coles.py             # Обучение CoLES -> извлечение юзер-эмбеддингов
+ run_coles_refit.py       # Refit CatBoost (+ CoLES эмбеддинги) -> создание сабмита
  coles_seed_fb50.csv      # Лучший сабмит (0.1414)
 ```
 
@@ -58,7 +58,7 @@ current_pipeline/
 | **RED\|SUSP** | target_bin | Только размеченные (RED∪YELLOW) | «Если подозрительная - RED?» |
 | **FEEDBACK** | target_bin | Все (с FB-фичами) | Использует историю меток клиента |
 
-### Формула блендинга
+### Формула бленда:
 
 ```
 product = logit(sigmoid(SUSP) * sigmoid(RED|SUSP))
